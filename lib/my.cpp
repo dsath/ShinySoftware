@@ -1,4 +1,3 @@
-#include "my.h"
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/videoio.hpp>
@@ -11,6 +10,8 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "my.hpp"
+#include "box.hpp"
 
 void make_1080(VideoCapture *v) {
   v->set(3, 1920);
@@ -63,37 +64,7 @@ bool inRange(int low, int high, int val) {
   }
 }
 
-void setBox(VideoCapture *v, box *b) {
-  int change = 5;
-  Mat f;
-  namedWindow("window", CV_WINDOW_AUTOSIZE);
-  bool done = false;;
-  while (v->read(f) && !done) {
-    char c;
-    addBlackBox(&f, b->col, b->row, b->height);
-    imshow("window", f);
-    c = waitKey( 0 ); 
-    switch(c) {
-      case 119:
-          *b = {b->col, b->row - change, b->height};
-          break;
-      case 115:
-          *b = {b->col, b->row + change, b->height};
-          break;
-      case 97:
-          *b = {b->col - change, b->row, b->height};
-          break;
-      case 100:
-          *b = {b->col + change, b->row, b->height};
-          break;
-      default:
-          done = true;
-          break;
-      }
-  }
-}
-
-void setBoxI (Mat f, box *b) {
+void setBox(Mat f, box *b) {
   Mat temp;
   int change = 5;
   namedWindow("window", CV_WINDOW_AUTOSIZE);

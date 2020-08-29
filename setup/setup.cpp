@@ -11,8 +11,10 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <fstream>
+#include <string>
 
-#include "../lib/my.h"
+#include "../lib/my.hpp"
+#include "../lib/box.hpp"
 
 
 using namespace cv;
@@ -33,7 +35,7 @@ int main(int argv, char** argc)
  
   Mat frame;
   namedWindow("window", CV_WINDOW_AUTOSIZE);
-  VideoCapture vid(0);
+  VideoCapture vid(stoi(argc[1]));
   
   //set resolution
   make_480(&vid);
@@ -45,8 +47,8 @@ int main(int argv, char** argc)
       break;
   }
 
-  setBoxI(frame, &one);
-  setBoxI(frame, &two);
+  setBox(frame, &one);
+  setBox(frame, &two);
 
   bgr1 = getBGR(&frame, one.col, one.row, one.height);
   addBlackBox(&frame, one.col, one.row, one.height);
@@ -62,10 +64,17 @@ int main(int argv, char** argc)
 
   c = waitKey(0);
   if(c == 's') {
+    ofstream coords("coords.txt");
     ofstream file;
-    file.open ("data.txt");
-    file << one.col << endl << one.row << endl << one.height << endl;
-    file << two.col << endl << two.row << endl << two.height << endl;
+    string filename;
+    
+    std::cout << "Enter Name of file." << endl;
+    std::cin >> filename;
+    file.open (filename);
+    
+    //last color recorded coords will be saved
+    coords << one.col << endl << one.row << endl << one.height << endl;
+    coords << two.col << endl << two.row << endl << two.height << endl;
     file << bgr1[0] << endl << bgr1[1] << endl << bgr1[2] << endl;
     file << bgr2[0] << endl << bgr2[1] << endl << bgr2[2] << endl;
   }
