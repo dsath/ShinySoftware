@@ -17,6 +17,9 @@
 #include "lib/box.hpp"
 #include "lib/TimeState.hpp"
 
+#include <chrono>
+#include <thread>
+
 using namespace cv;
 using namespace std;
 
@@ -29,7 +32,7 @@ int main(int argv, char** argc)
 
   //confidence for getting values
   const int conf1 = 10;
-  const int conf2 = 50;
+  const int conf2 = 20;
 
   int numResets = 0;
 
@@ -66,15 +69,28 @@ int main(int argv, char** argc)
     //set state of program based off current time
     state.setState();
 
+    //wait till time has changed completely
+    if(state.isTimeChange()) {
+      //stop pressing A
+      n = write(fd, "A", 1);
+      if ( n < 0) cout << "Write of A failed" << std::endl;
+      cout << "Waiting..." << endl;
+      std::this_thread::sleep_for(std::chrono::minutes(6));
+      //send soft reset signal
+      n = write(fd, "B", 1);
+      if ( n < 0 ) cout << "Write of B failed" << std::endl;
+      continue;
+    }
+
     bgr1 = getBGR(&frame, state.CurState[0].col, state.CurState[0].row, state.CurState[0].height);
     addBlackBox(&frame, state.CurState[0].col, state.CurState[0].row, state.CurState[0].height);
     imshow("window", frame);
-
 
     //Check if yellow cap appears
     if( inRange(state.CurState[0].blue - conf1, state.CurState[0].blue + conf1, bgr1[0]) && 
         inRange(state.CurState[0].green - conf1, state.CurState[0].green + conf1, bgr1[1]) && 
         inRange(state.CurState[0].red - conf1, state.CurState[0].red + conf1, bgr1[2])) {
+
 
       //Show CurStateent cap colors
       cout << "cap: " << bgr1[0] << "--" << bgr1[1] << "--" << bgr1[2] << endl;
@@ -83,7 +99,7 @@ int main(int argv, char** argc)
       n = write(fd, "A", 1);
       if ( n < 0) cout << "Write of A failed" << std::endl;
 
-      for(int i = 0; i < 35; i++) {
+      for(int i = 0; i < 30; i++) {
         vid.read(frame);
         imshow("window", frame);
         cvWaitKey(1000 / fps);
@@ -122,15 +138,29 @@ int main(int argv, char** argc)
         numResets++;
         cout << "Soft Resets: " << numResets << std::endl;
         cout << std::endl;
+
+        //set new target colors for time of day based off new readings
+        state.setNowTargetColor(bgr1, bgr2);
+
+        //passes bright soft reset screen then resumes
+        for(int i = 0; i < 50; i++) {
+          vid.read(frame);
+          imshow("window", frame);
+          cvWaitKey(1000 / fps);
+        }
+
         //free bgr
         free(bgr1);
         free(bgr2);
        } else {
+         cout << "Shiny has been found!!!" << std::endl; 
+         cout << "poke: " << bgr2[0] << "--" << bgr2[1] << "--" << bgr2[2] << endl;
          free(bgr1);
          free(bgr2);
-         cout << "Shiny has been found!!!" << std::endl; 
+         //endless loop of reading frames
          while(vid.read(frame)) {
            imshow("window", frame);
+           cvWaitKey(1000 / fps);
          }
          break;
        }
