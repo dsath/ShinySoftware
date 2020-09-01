@@ -7,7 +7,6 @@
 using namespace std;
 
 int main() {
-  usleep(11);
   //test 1
   {
     time_t n = time(0);

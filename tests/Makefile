@@ -1,8 +1,18 @@
-all: test
+prog=test
+libs=-lopencv_core -lopencv_videoio -lopencv_highgui -lopencv_imgcodecs
+prereq=../lib/my.hpp ../lib/my.cpp
+
+
+
+
+all: test videoTest
 
 test: test.cpp ../lib/TimeState.cpp ../lib/TimeState.hpp
 	g++ -o test test.cpp ../lib/TimeState.cpp
 
+videoTest: videoTest.cpp $(prereq)
+	g++ -o videoTest $< ../lib/my.cpp ../lib/TimeState.cpp $(libs) 
+
 clean:
-	rm -f test
+	rm -f test videoTest
 
