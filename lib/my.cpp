@@ -6,6 +6,8 @@
 
 #include <stdint.h>
 #include <iostream>
+#include <signal.h>
+#include <sys/types.h>
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -95,6 +97,7 @@ void setBox(Mat f, box *b) {
       }
   }
 }
+
 
 
 

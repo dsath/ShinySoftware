@@ -13,6 +13,10 @@
 #include <fstream>
 #include <ctime>
 
+#include <wiringPi.h>
+#include <sys/types.h>
+#include <signal.h>
+
 #include "lib/my.hpp"
 #include "lib/box.hpp"
 #include "lib/TimeState.hpp"
@@ -20,15 +24,31 @@
 #include <chrono>
 #include <thread>
 
+#define buttonA 0;
+#define buttonStart 2;
+#define buttonSelect 3;
+
 using namespace cv;
 using namespace std;
 
-
+void stop(int sig) {
+  if (sig == SIGUSR1) {
+    stop = !(stop);
+  }
+}
 
 int main(int argv, char** argc)
 {
   //TimeState object used to keep track of day/night cycles
   TimeState state;
+
+  wiringPiSetup();
+  pinMode(buttonA, OUTPUT);
+  pinMode(buttonSelect, OUTPUT);
+  pinMode(buttonStart, OUTPUT);
+  digitalWrite(buttonA, HIGH);
+  digitalWrite(buttonStart, HIGH);
+  digitalWrite(buttonSelect, HIGH);
 
   //confidence for getting values
   const int conf1 = 10;
@@ -49,14 +69,12 @@ int main(int argv, char** argc)
   //blue, green, red value for box two 
   int *bgr2;
 
-  fd = open("/dev/ttyUSB0", O_RDWR | O_NOCTTY | O_NDELAY);
-  if (fd == -1) { 
-    //Check if open port failed
-    perror("open_port: Unable to open /dev/ttyUSB0");
-  } else {
-    fcntl(fd, F_SETFL, 0);
-  }
- 
+  //used for stopping A presses
+  bool stop = false;
+
+  //only need to make A press process once per program
+  bool forked = false;
+
   Mat frame;
   namedWindow("window", CV_WINDOW_AUTOSIZE);
   //selects camera from command line
@@ -64,23 +82,49 @@ int main(int argv, char** argc)
   //make resolution 480
   make_480(&vid);
 
-
+//#############################################
   while (vid.read(frame)) {
+    //signal to stop or continue pressing A to proccess
+    signal(SIGUSR1, stop);
     //set state of program based off current time
     state.setState();
+
+    if(!forked) {
+      pid_t pid = fork();
+      if(pid == -1) {
+        printf("Error when forking");
+      }
+      else if (pid == 0) {
+        while(1) {
+          //continuously press A until signal received
+          while(!stop); 
+          digitalWrite(buttonA, LOW);
+          std::this_thread::sleep_for(std::chrono::milliseconds(400));
+          digitalWrite(buttonA, HIGH);
+          std::this_thread::sleep_for(std::chrono::milliseconds(400));
+        }
+        break;
+      }
+      forked = true;
+    }
 
     //wait till time has changed completely
     if(state.isTimeChange()) {
       //stop pressing A
-      n = write(fd, "A", 1);
-      if ( n < 0) cout << "Write of A failed" << std::endl;
+      kill(pid, SIGUSR1);
       cout << "Waiting..." << endl;
       std::this_thread::sleep_for(std::chrono::minutes(6));
       //send soft reset signal
-      n = write(fd, "B", 1);
-      if ( n < 0 ) cout << "Write of B failed" << std::endl;
+      digitalWrite(buttonStart, LOW);
+      digitalWrite(buttonSelect, LOW);
+      std::this_thread::sleep_for(std::chrono::milliseconds(400));
+      digitalWrite(buttonStart, HIGH);
+      digitalWrite(buttonSelect, HIGH);
+      //start pressing A again
+      kill(pid, SIGUSR1);
       continue;
     }
+//############################################# Done
 
     bgr1 = getBGR(&frame, state.CurState[0].col, state.CurState[0].row, state.CurState[0].height);
     addBlackBox(&frame, state.CurState[0].col, state.CurState[0].row, state.CurState[0].height);
@@ -95,9 +139,10 @@ int main(int argv, char** argc)
       //Show CurStateent cap colors
       cout << "cap: " << bgr1[0] << "--" << bgr1[1] << "--" << bgr1[2] << endl;
 
+//#############################################
       //send stop pressing A signal
-      n = write(fd, "A", 1);
-      if ( n < 0) cout << "Write of A failed" << std::endl;
+      kill(pid, SIGUSR1);
+//############################################# Done
 
       for(int i = 0; i < 30; i++) {
         vid.read(frame);
@@ -131,16 +176,22 @@ int main(int argv, char** argc)
              inRange(state.CurState[1].green - conf2, state.CurState[1].green + conf2, bgr2[1]) &&
              inRange(state.CurState[1].red - conf2, state.CurState[1].red + conf2, bgr2[2])) {
         
+//#############################################
         //send soft reset signal
-        n = write(fd, "B", 1);
-        if ( n < 0 ) cout << "Write of B failed" << std::endl;
+        digitalWrite(buttonStart, LOW);
+        digitalWrite(buttonSelect, LOW);
+        std::this_thread::sleep_for(std::chrono::milliseconds(400));
+        digitalWrite(buttonStart, HIGH);
+        digitalWrite(buttonSelect, HIGH);
+        kill(pid, SIGUSR1);
+//############################################# Done
         //number soft resets
         numResets++;
         cout << "Soft Resets: " << numResets << std::endl;
         cout << std::endl;
 
         //set new target colors for time of day based off new readings
-        state.setNowTargetColor(bgr1, bgr2);
+        //state.setNowTargetColor(bgr1, bgr2);
 
         //passes bright soft reset screen then resumes
         for(int i = 0; i < 50; i++) {
