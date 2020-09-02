@@ -17,21 +17,25 @@
 #include <sys/types.h>
 #include <signal.h>
 
+#include <chrono>
+#include <thread>
+
 #include "lib/my.hpp"
 #include "lib/box.hpp"
 #include "lib/TimeState.hpp"
 
-#include <chrono>
-#include <thread>
 
-#define buttonA 0;
-#define buttonStart 2;
-#define buttonSelect 3;
+#define buttonA 0
+#define buttonStart 2
+#define buttonSelect 3
 
 using namespace cv;
 using namespace std;
 
-void stop(int sig) {
+//used for stopping A presses
+static bool stop = false;
+
+void _stop(int sig) {
   if (sig == SIGUSR1) {
     stop = !(stop);
   }
@@ -69,8 +73,6 @@ int main(int argv, char** argc)
   //blue, green, red value for box two 
   int *bgr2;
 
-  //used for stopping A presses
-  bool stop = false;
 
   //only need to make A press process once per program
   bool forked = false;
@@ -82,31 +84,30 @@ int main(int argv, char** argc)
   //make resolution 480
   make_480(&vid);
 
+  signal(SIGUSR1, _stop);
+
+  //start A pressing process
+  pid_t pid = fork();
+  if(pid == -1) {
+    printf("Error when forking");
+  }
+  else if (pid == 0) {
+    while(1) {
+      //continuously press A until signal received
+      while(!_stop); 
+      digitalWrite(buttonA, LOW);
+      std::this_thread::sleep_for(std::chrono::milliseconds(400));
+      digitalWrite(buttonA, HIGH);
+      std::this_thread::sleep_for(std::chrono::milliseconds(400));
+    }
+  }
+
 //#############################################
   while (vid.read(frame)) {
     //signal to stop or continue pressing A to proccess
-    signal(SIGUSR1, stop);
     //set state of program based off current time
     state.setState();
 
-    if(!forked) {
-      pid_t pid = fork();
-      if(pid == -1) {
-        printf("Error when forking");
-      }
-      else if (pid == 0) {
-        while(1) {
-          //continuously press A until signal received
-          while(!stop); 
-          digitalWrite(buttonA, LOW);
-          std::this_thread::sleep_for(std::chrono::milliseconds(400));
-          digitalWrite(buttonA, HIGH);
-          std::this_thread::sleep_for(std::chrono::milliseconds(400));
-        }
-        break;
-      }
-      forked = true;
-    }
 
     //wait till time has changed completely
     if(state.isTimeChange()) {
