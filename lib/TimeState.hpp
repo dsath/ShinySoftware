@@ -10,14 +10,14 @@ class TimeState {
     box Night[2];
     int hour;
     int min;
-    int getHalfDiff(int x, int y);
 
   public:
     TimeState();
     box CurState[2];
     void setState(); 
+    void setState(Tstate s); 
     void printState();
     bool isTimeChange();
-    void setNowTargetColor(int *bgr1, int *bgr2);
+    inline Tstate getState() { return state; }
 };
 #endif

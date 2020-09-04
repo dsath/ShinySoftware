@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <iostream>
 #include <stdio.h>
+#include <wiringPi.h>
 #include "../lib/my.hpp"
 
 using namespace cv;
@@ -16,9 +17,13 @@ int coord[3] {45, 280, 10};
 
 int main(int argv, char** argc)
 {
+  wiringPiSetup();
+  initButtons();
+
   Mat frame;
   VideoCapture vid(stoi(argc[1]));
   int *bgr;
+
 
   if(!vid.isOpened())
   {
@@ -26,6 +31,7 @@ int main(int argv, char** argc)
     return -1;
   }
 
+  softReset();
   while (vid.read(frame))
   {
     bgr = getBGR(&frame, coord[0], coord[1], coord[2]);

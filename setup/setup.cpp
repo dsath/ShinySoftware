@@ -12,20 +12,36 @@
 #include <fcntl.h>
 #include <fstream>
 #include <string>
+#include <wiringPi.h>
+#include <sys/types.h>
+#include <signal.h>
 
 #include "../lib/my.hpp"
 #include "../lib/box.hpp"
 
+#define buttonA 0
+#define buttonStart 2
+#define buttonSelect 3
+
+static bool stop = false;
+void _stop(int sig) {
+  if (sig == SIGUSR1) {
+    stop = !(stop);
+  }
+}
 
 using namespace cv;
 using namespace std;
 
 int main(int argv, char** argc)
 {
+  const int boxSize = 10;
+  wiringPiSetup();
+  initButtons();
   
   char c;
-  struct box one = {135, 225, 10};
-  struct box two = {410, 70, 10};
+  struct box one = {135, 225, boxSize};
+  struct box two = {410, 70, boxSize};
 
   const int fps = 20;
   //blue, green, red value for box one
@@ -40,7 +56,23 @@ int main(int argv, char** argc)
   //set resolution
   make_480(&vid);
 
+  
 
+  signal(SIGUSR1, _stop);
+  //start A pressing process
+  pid_t pid = fork();
+  if(pid == -1) {
+    printf("Error when forking");
+  }
+  else if (pid == 0) {
+    while(1) {
+      //continuously press A until signal received
+      while(!_stop); 
+      pressA();
+    }
+  }
+
+  softReset();
   while(vid.read(frame)) {
     imshow("window", frame);
     if(cvWaitKey(1000/fps) > 0)

@@ -33,11 +33,11 @@ using namespace cv;
 using namespace std;
 
 //used for stopping A presses
-static bool stop = false;
+static bool stopPressA = false;
 
 void _stop(int sig) {
   if (sig == SIGUSR1) {
-    stop = !(stop);
+    stopPressA = !(stopPressA);
   }
 }
 
@@ -47,16 +47,11 @@ int main(int argv, char** argc)
   TimeState state;
 
   wiringPiSetup();
-  pinMode(buttonA, OUTPUT);
-  pinMode(buttonSelect, OUTPUT);
-  pinMode(buttonStart, OUTPUT);
-  digitalWrite(buttonA, HIGH);
-  digitalWrite(buttonStart, HIGH);
-  digitalWrite(buttonSelect, HIGH);
+  initButtons();
 
   //confidence for getting values
-  const int conf1 = 10;
-  const int conf2 = 20;
+  const int conf1 = 5;
+  const int conf2 = 10;
 
   int numResets = 0;
 
@@ -73,9 +68,6 @@ int main(int argv, char** argc)
   //blue, green, red value for box two 
   int *bgr2;
 
-
-  //only need to make A press process once per program
-  bool forked = false;
 
   Mat frame;
   namedWindow("window", CV_WINDOW_AUTOSIZE);
@@ -94,15 +86,12 @@ int main(int argv, char** argc)
   else if (pid == 0) {
     while(1) {
       //continuously press A until signal received
-      while(!_stop); 
-      digitalWrite(buttonA, LOW);
-      std::this_thread::sleep_for(std::chrono::milliseconds(400));
-      digitalWrite(buttonA, HIGH);
-      std::this_thread::sleep_for(std::chrono::milliseconds(400));
+      while(stopPressA); 
+      pressA();
     }
   }
 
-//#############################################
+  softReset();
   while (vid.read(frame)) {
     //signal to stop or continue pressing A to proccess
     //set state of program based off current time
@@ -115,17 +104,34 @@ int main(int argv, char** argc)
       kill(pid, SIGUSR1);
       cout << "Waiting..." << endl;
       std::this_thread::sleep_for(std::chrono::minutes(6));
-      //send soft reset signal
-      digitalWrite(buttonStart, LOW);
-      digitalWrite(buttonSelect, LOW);
-      std::this_thread::sleep_for(std::chrono::milliseconds(400));
-      digitalWrite(buttonStart, HIGH);
-      digitalWrite(buttonSelect, HIGH);
+      //Soft reset and passes bright soft reset screen then resumes
+      softReset();
+      for(int i = 0; i < 50; i++) {
+        vid.read(frame);
+        imshow("window", frame);
+        cvWaitKey(1000 / fps);
+      }
       //start pressing A again
       kill(pid, SIGUSR1);
       continue;
     }
-//############################################# Done
+
+    //skip twilight state
+    if(state.getState() == TWILIGHT_STATE) {
+      kill(pid, SIGUSR1);
+      cout << "Waiting..." << endl;
+      std::this_thread::sleep_for(std::chrono::hours(3));
+      std::this_thread::sleep_for(std::chrono::minutes(5));
+      softReset();
+      for(int i = 0; i < 50; i++) {
+        vid.read(frame);
+        imshow("window", frame);
+        cvWaitKey(1000 / fps);
+      }
+      kill(pid, SIGUSR1);
+      continue;
+    }
+
 
     bgr1 = getBGR(&frame, state.CurState[0].col, state.CurState[0].row, state.CurState[0].height);
     addBlackBox(&frame, state.CurState[0].col, state.CurState[0].row, state.CurState[0].height);
@@ -137,13 +143,11 @@ int main(int argv, char** argc)
         inRange(state.CurState[0].red - conf1, state.CurState[0].red + conf1, bgr1[2])) {
 
 
-      //Show CurStateent cap colors
+      //Show CurState cap colors
       cout << "cap: " << bgr1[0] << "--" << bgr1[1] << "--" << bgr1[2] << endl;
 
-//#############################################
       //send stop pressing A signal
       kill(pid, SIGUSR1);
-//############################################# Done
 
       for(int i = 0; i < 30; i++) {
         vid.read(frame);
@@ -177,29 +181,18 @@ int main(int argv, char** argc)
              inRange(state.CurState[1].green - conf2, state.CurState[1].green + conf2, bgr2[1]) &&
              inRange(state.CurState[1].red - conf2, state.CurState[1].red + conf2, bgr2[2])) {
         
-//#############################################
-        //send soft reset signal
-        digitalWrite(buttonStart, LOW);
-        digitalWrite(buttonSelect, LOW);
-        std::this_thread::sleep_for(std::chrono::milliseconds(400));
-        digitalWrite(buttonStart, HIGH);
-        digitalWrite(buttonSelect, HIGH);
-        kill(pid, SIGUSR1);
-//############################################# Done
         //number soft resets
         numResets++;
-        cout << "Soft Resets: " << numResets << std::endl;
-        cout << std::endl;
-
-        //set new target colors for time of day based off new readings
-        //state.setNowTargetColor(bgr1, bgr2);
+        cout << "Soft Resets: " << numResets << std::endl << std::endl;
 
         //passes bright soft reset screen then resumes
+        softReset();
         for(int i = 0; i < 50; i++) {
           vid.read(frame);
           imshow("window", frame);
           cvWaitKey(1000 / fps);
         }
+        kill(pid, SIGUSR1);
 
         //free bgr
         free(bgr1);
@@ -207,6 +200,7 @@ int main(int argv, char** argc)
        } else {
          cout << "Shiny has been found!!!" << std::endl; 
          cout << "poke: " << bgr2[0] << "--" << bgr2[1] << "--" << bgr2[2] << endl;
+         state.printState();
          free(bgr1);
          free(bgr2);
          //endless loop of reading frames

@@ -99,6 +99,23 @@ void TimeState::setState() {
   }
 }
 
+void TimeState::setState(Tstate s) {
+  if (s == NIGHT_STATE) { 
+    state = NIGHT_STATE;
+    CurState[0] = Night[0];
+    CurState[1] = Night[1];
+  }
+  else if (s == TWILIGHT_STATE) {
+    state = TWILIGHT_STATE;
+    CurState[0] = Twilight[0];
+    CurState[1] = Twilight[1];
+  } else {
+    state = DAY_STATE;
+    CurState[0] = Day[0];
+    CurState[1] = Day[1];
+  }
+}
+
 void TimeState::printState() {
   if (state == NIGHT_STATE) {
     cout << "It's night and the time is " << hour << ":" << min << endl;
@@ -119,39 +136,5 @@ bool TimeState::isTimeChange() {
     changing = true;
   } 
   return changing;
-}
-
-int TimeState::getHalfDiff(int x, int y) {
-  return (x - y) / 2;
-}
-
-void TimeState::setNowTargetColor(int *bgr1, int *bgr2) {
-  if( state == DAY_STATE)  {
-    Day[0].blue  += getHalfDiff(bgr1[0], Day[0].blue);
-    Day[0].green += getHalfDiff(bgr1[1], Day[0].green);
-    Day[0].red   += getHalfDiff(bgr1[2], Day[0].red);
-
-    Day[1].blue  += getHalfDiff(bgr2[0], Day[1].blue);
-    Day[1].green += getHalfDiff(bgr2[1], Day[1].green);
-    Day[1].red   += getHalfDiff(bgr2[2], Day[1].red);
-  } 
-  else if ( state == TWILIGHT_STATE) {
-    Twilight[0].blue  += getHalfDiff(bgr1[0], Twilight[0].blue);
-    Twilight[0].green += getHalfDiff(bgr1[1], Twilight[0].green);
-    Twilight[0].red   += getHalfDiff(bgr1[2], Twilight[0].red);
-
-    Twilight[1].blue  += getHalfDiff(bgr2[0], Twilight[1].blue);
-    Twilight[1].green += getHalfDiff(bgr2[1], Twilight[1].green);
-    Twilight[1].red   += getHalfDiff(bgr2[2], Twilight[1].red);
-  }
-  else {
-    Night[0].blue  += getHalfDiff(bgr1[0], Night[0].blue);
-    Night[0].green += getHalfDiff(bgr1[1], Night[0].green);
-    Night[0].red   += getHalfDiff(bgr1[2], Night[0].red);
-
-    Night[1].blue  += getHalfDiff(bgr2[0], Night[1].blue);
-    Night[1].green += getHalfDiff(bgr2[1], Night[1].green);
-    Night[1].red   += getHalfDiff(bgr2[2], Night[1].red);
-  }
 }
 

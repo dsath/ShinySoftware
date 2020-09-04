@@ -1,5 +1,5 @@
 prog=test
-libs=-lopencv_core -lopencv_videoio -lopencv_highgui -lopencv_imgcodecs
+libs=-lopencv_core -lopencv_videoio -lopencv_highgui -lopencv_imgcodecs -lwiringPi
 prereq=../lib/my.hpp ../lib/my.cpp
 
 

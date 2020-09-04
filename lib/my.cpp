@@ -8,6 +8,9 @@
 #include <iostream>
 #include <signal.h>
 #include <sys/types.h>
+#include <wiringPi.h>
+#include <chrono>
+#include <thread>
 
 #include <stdio.h>
 #include <fcntl.h>
@@ -15,6 +18,9 @@
 #include "my.hpp"
 #include "box.hpp"
 
+#define buttonA 0
+#define buttonStart 2
+#define buttonSelect 3
 void make_1080(VideoCapture *v) {
   v->set(3, 1920);
   v->set(4, 1080);
@@ -98,6 +104,27 @@ void setBox(Mat f, box *b) {
   }
 }
 
+void pressA() {
+      digitalWrite(buttonA, HIGH);
+      std::this_thread::sleep_for(std::chrono::milliseconds(400));
+      digitalWrite(buttonA, LOW);
+      std::this_thread::sleep_for(std::chrono::milliseconds(400));
+}
 
-
+void softReset() {
+      digitalWrite(buttonStart, HIGH);
+      digitalWrite(buttonSelect, HIGH);
+      std::this_thread::sleep_for(std::chrono::milliseconds(400));
+      digitalWrite(buttonStart, LOW);
+      digitalWrite(buttonSelect, LOW);
+      std::this_thread::sleep_for(std::chrono::milliseconds(400));
+}
+void initButtons() {
+  pinMode(buttonA, OUTPUT);
+  pinMode(buttonSelect, OUTPUT);
+  pinMode(buttonStart, OUTPUT);
+  digitalWrite(buttonA, LOW);
+  digitalWrite(buttonStart, LOW);
+  digitalWrite(buttonSelect, LOW);
+}
 
