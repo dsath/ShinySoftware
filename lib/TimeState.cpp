@@ -19,6 +19,8 @@ TimeState::TimeState() {
   int twilightBlue2, twilightGreen2, twilightRed2;
   int nightBlue1, nightGreen1, nightRed1;
   int nightBlue2, nightGreen2, nightRed2;
+  int caveBlue1, caveGreen1, caveRed1;
+  int caveBlue2, caveGreen2, caveRed2;
 
   ifstream file;
 
@@ -69,12 +71,24 @@ TimeState::TimeState() {
     file.close();
   }
 
+  //get bgr values for cave
+  {
+    file.open("setup/cave.txt");
+    if(!(file.is_open())) {
+      std::cout << "error opening file" << endl;
+    }
+    file >> caveBlue1; file >> caveGreen1; file >> caveRed1;
+    file >> caveBlue2; file >> caveGreen2; file >> caveRed2;
+    file.close();
+  }
   Day[0] = {c1, r1, h1, dayBlue1, dayGreen1, dayRed1}; 
   Day[1] = {c2, r2, h2, dayBlue2, dayGreen2, dayRed2}; 
   Twilight[0] = {c1, r1, h1, twilightBlue1, twilightGreen1, twilightRed1}; 
   Twilight[1] = {c2, r2, h2, twilightBlue2, twilightGreen2, twilightRed2}; 
   Night[0] = {c1, r1, h1, nightBlue1, nightGreen1, nightRed1}; 
   Night[1] = {c2, r2, h2, nightBlue2, nightGreen2, nightRed2}; 
+  Cave[0] = {c1, r1, h1, caveBlue1, caveGreen1, caveRed1}; 
+  Cave[1] = {c2, r2, h2, caveBlue2, caveGreen2, caveRed2}; 
 
 }
 
@@ -109,10 +123,19 @@ void TimeState::setState(Tstate s) {
     state = TWILIGHT_STATE;
     CurState[0] = Twilight[0];
     CurState[1] = Twilight[1];
-  } else {
+  } 
+  else if (s == DAY_STATE) {
     state = DAY_STATE;
     CurState[0] = Day[0];
     CurState[1] = Day[1];
+  }
+  else if (s == CAVE_STATE) {
+    state = CAVE_STATE;
+    CurState[0] = Cave[0];
+    CurState[1] = Cave[1];
+  }
+  else {
+    std::cout << "Error: State Doesn't Exist" << std::endl;
   }
 }
 

@@ -95,9 +95,15 @@ int main(int argv, char** argc)
   while (vid.read(frame)) {
     //signal to stop or continue pressing A to proccess
     //set state of program based off current time
+#ifdef TIMECHANGE
     state.setState();
+#endif
 
+#ifndef TIMECHANGE
+    state.setState(CAVE_STATE);
+#endif
 
+#ifdef TIMECHANGE
     //wait till time has changed completely
     if(state.isTimeChange()) {
       //stop pressing A
@@ -131,6 +137,7 @@ int main(int argv, char** argc)
       kill(pid, SIGUSR1);
       continue;
     }
+#endif
 
 
     bgr1 = getBGR(&frame, state.CurState[0].col, state.CurState[0].row, state.CurState[0].height);

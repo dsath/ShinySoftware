@@ -1,13 +1,14 @@
 #ifndef TIMESTATE_HPP
 #define TIMESTATE_HPP
 #include "box.hpp"
-enum Tstate { DAY_STATE, TWILIGHT_STATE, NIGHT_STATE };
+enum Tstate { DAY_STATE, TWILIGHT_STATE, NIGHT_STATE, CAVE_STATE };
 class TimeState {
   private: 
     Tstate state;
     box Day[2];
     box Twilight[2];
     box Night[2];
+    box Cave[2];
     int hour;
     int min;
 
