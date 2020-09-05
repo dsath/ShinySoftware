@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include "my.hpp"
 #include "box.hpp"
+#include "TimeState.hpp"
 
 #define buttonA 0
 #define buttonStart 2
@@ -74,7 +75,7 @@ bool inRange(int low, int high, int val) {
 
 void setBox(Mat f, box *b) {
   Mat temp;
-  int change = 5;
+  int change = 2;
   namedWindow("window", CV_WINDOW_AUTOSIZE);
 
   bool done = false;;
@@ -104,17 +105,17 @@ void setBox(Mat f, box *b) {
   }
 }
 
-int* getAverageColorFrames(int n, VideoCapture *vc, Mat *f) {
-  int ret = new int[3] {0};
+int* getAverageColorFrames(int n, VideoCapture *vc, Mat *f, TimeState *state, int fps) {
+  int *ret = new int[3] {0};
   int *temp;
   for(int i = 0; i < n; i++) {
-    vc.read(f);
-    temp = getBGR(&f, state.CurState[1].col, state.CurState[1].row, state.CurState[1].height);
+    vc->read(*f);
+    temp = getBGR(f, state->CurState[1].col, state->CurState[1].row, state->CurState[1].height);
     ret[0] += temp[0];
     ret[1] += temp[1];
     ret[2] += temp[2];
-    addBlackBox(&f, state.CurState[1].col, state.CurState[1].row, state.CurState[1].height);
-    imshow("window", f);
+    addBlackBox(f, state->CurState[1].col, state->CurState[1].row, state->CurState[1].height);
+    imshow("window", *f);
     free(temp);
     cvWaitKey(1000 / fps);
   }
@@ -124,10 +125,10 @@ int* getAverageColorFrames(int n, VideoCapture *vc, Mat *f) {
   return ret;
 }
 
-void showFrames(int n, VideoCapture *vc, Mat *f) {
+void showFrames(int n, VideoCapture *vc, Mat *f, int fps) {
   for(int i = 0; i < n; i++) {
-    vid.read(frame);
-    imshow("window", frame);
+    vc->read(*f);
+    imshow("window", *f);
     cvWaitKey(1000 / fps);
   }
 }

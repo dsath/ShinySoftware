@@ -6,6 +6,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <unistd.h>
 #include "box.hpp"
+#include "TimeState.hpp"
 
 using namespace cv;
 using namespace std;
@@ -21,6 +22,6 @@ void setBox(Mat f, box *b);
 void pressA();
 void softReset();
 void initButtons();
-int* getAverageColorFrames(int n, VideoCapture *vc, Mat *f); 
-void showFrames(int n, VideoCapture *vc, Mat *f); 
+int* getAverageColorFrames(int n, VideoCapture *vc, Mat *f, TimeState *state, int fps);  
+void showFrames(int n, VideoCapture *vc, Mat *f, int fps);
 #endif

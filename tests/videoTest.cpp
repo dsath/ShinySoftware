@@ -5,6 +5,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <wiringPi.h>
+#include <signal.h>
 #include "../lib/my.hpp"
 
 using namespace cv;
@@ -12,8 +13,23 @@ using namespace std;
 
 const int fps = 20;
 
+//used for stopping A presses
+static bool stopPressA = false;
 
-int coord[3] {45, 280, 10};
+void _stop(int sig) {
+  if (sig == SIGUSR1) {
+    stopPressA = !(stopPressA);
+  }
+}
+
+int coord[3] {90, 310, 10};
+/*
+90
+310
+10
+465
+110
+10*/
 
 int main(int argv, char** argc)
 {
@@ -29,6 +45,21 @@ int main(int argv, char** argc)
   {
     cout << "Failed opening webcam" << std::endl;
     return -1;
+  }
+
+  signal(SIGUSR1, _stop);
+
+  //start A pressing process
+  pid_t pid = fork();
+  if(pid == -1) {
+    printf("Error when forking");
+  }
+  else if (pid == 0) {
+    while(1) {
+      //continuously press A until signal received
+      while(stopPressA); 
+      pressA();
+    }
   }
 
   softReset();

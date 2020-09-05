@@ -55,7 +55,7 @@ int main(int argv, char** argc)
   char *now;
 
   //confidence for getting values
-  const int conf1 = 5;
+  const int conf1 = 4;
   const int conf2 = 10;
 
   int numResets = 0;
@@ -92,7 +92,7 @@ int main(int argv, char** argc)
   }
 
   n = time(0);
-  now = ctime($n);
+  now = ctime(&n);
 
   std::cout << "The date and time is: " << now << std::endl;
   std::cout << "Starting hunt... "  << std::endl;
@@ -118,7 +118,7 @@ int main(int argv, char** argc)
       std::this_thread::sleep_for(std::chrono::minutes(6));
       //Soft reset and passes bright soft reset screen then resumes
       softReset();
-      showFrames(50, &vid, &frame);
+      showFrames(50, &vid, &frame, fps);
       //start pressing A again
       kill(pid, SIGUSR1);
       continue;
@@ -131,7 +131,7 @@ int main(int argv, char** argc)
       std::this_thread::sleep_for(std::chrono::hours(3));
       std::this_thread::sleep_for(std::chrono::minutes(5));
       softReset();
-      showFrames(50, &vid, &frame);
+      showFrames(50, &vid, &frame, fps);
       kill(pid, SIGUSR1);
       continue;
     }
@@ -151,10 +151,10 @@ int main(int argv, char** argc)
       //send stop pressing A signal
       kill(pid, SIGUSR1);
 
-      showFrames(30, &vid, &frame);
+      showFrames(30, &vid, &frame, fps);
 
       //get poke bgr value with 10 frame accuracry
-      bgr2 = getAverageColorFrames(10, &vid, &frame);
+      bgr2 = getAverageColorFrames(10, &vid, &frame, &state, fps);
 
         //CurStateent encounter BGR value
       cout << "poke: " << bgr2[0] << "--" << bgr2[1] << "--" << bgr2[2] << endl;
@@ -171,7 +171,7 @@ int main(int argv, char** argc)
 
         //passes bright soft reset screen then resumes
         softReset();
-        showFrames(50, &vid, &frame);
+        showFrames(50, &vid, &frame, fps);
 
         kill(pid, SIGUSR1);
 
@@ -180,7 +180,7 @@ int main(int argv, char** argc)
         free(bgr2);
        } else {
          n = time(0);
-         now = ctime($n);
+         now = ctime(&n);
          std::cout << "Shiny has been found!!!" << std::endl; 
          std::cout << "The current data and time is: " << now << std::endl;
          free(bgr1);
