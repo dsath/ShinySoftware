@@ -17,7 +17,6 @@ class TimeState {
     box CurState[2];
     void setState(); 
     void setState(Tstate s); 
-    void printState();
     bool isTimeChange();
     inline Tstate getState() { return state; }
 };

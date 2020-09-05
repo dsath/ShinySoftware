@@ -139,18 +139,6 @@ void TimeState::setState(Tstate s) {
   }
 }
 
-void TimeState::printState() {
-  if (state == NIGHT_STATE) {
-    cout << "It's night and the time is " << hour << ":" << min << endl;
-  } 
-  else if( state == TWILIGHT_STATE) {
-    cout << "It's twilight and the time is " << hour << ":" << min << endl;
-  } 
-  else {
-    cout << "It's day and the time is " << hour << ":" << min << endl;
-  }
-}
-
 bool TimeState::isTimeChange() {
   bool changing = false;
   if(( hour == 19 && min >= 57) ||

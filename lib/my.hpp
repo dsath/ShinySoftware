@@ -21,4 +21,6 @@ void setBox(Mat f, box *b);
 void pressA();
 void softReset();
 void initButtons();
+int* getAverageColorFrames(int n, VideoCapture *vc, Mat *f); 
+void showFrames(int n, VideoCapture *vc, Mat *f); 
 #endif

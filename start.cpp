@@ -20,6 +20,7 @@
 #include <chrono>
 #include <thread>
 
+
 #include "lib/my.hpp"
 #include "lib/box.hpp"
 #include "lib/TimeState.hpp"
@@ -49,20 +50,19 @@ int main(int argv, char** argc)
   wiringPiSetup();
   initButtons();
 
+  //for keeping track of time
+  time_t n;
+  char *now;
+
   //confidence for getting values
   const int conf1 = 5;
   const int conf2 = 10;
 
   int numResets = 0;
 
-  //Open ttyUSB0 serial port for writing
-  int fd;
-  int n;
-  
   //set frames per second
   const int fps = 20;
 
-  int *temp;
   //blue, green, red value for box one
   int *bgr1;
   //blue, green, red value for box two 
@@ -91,6 +91,12 @@ int main(int argv, char** argc)
     }
   }
 
+  n = time(0);
+  now = ctime($n);
+
+  std::cout << "The date and time is: " << now << std::endl;
+  std::cout << "Starting hunt... "  << std::endl;
+
   softReset();
   while (vid.read(frame)) {
     //signal to stop or continue pressing A to proccess
@@ -112,11 +118,7 @@ int main(int argv, char** argc)
       std::this_thread::sleep_for(std::chrono::minutes(6));
       //Soft reset and passes bright soft reset screen then resumes
       softReset();
-      for(int i = 0; i < 50; i++) {
-        vid.read(frame);
-        imshow("window", frame);
-        cvWaitKey(1000 / fps);
-      }
+      showFrames(50, &vid, &frame);
       //start pressing A again
       kill(pid, SIGUSR1);
       continue;
@@ -129,11 +131,7 @@ int main(int argv, char** argc)
       std::this_thread::sleep_for(std::chrono::hours(3));
       std::this_thread::sleep_for(std::chrono::minutes(5));
       softReset();
-      for(int i = 0; i < 50; i++) {
-        vid.read(frame);
-        imshow("window", frame);
-        cvWaitKey(1000 / fps);
-      }
+      showFrames(50, &vid, &frame);
       kill(pid, SIGUSR1);
       continue;
     }
@@ -150,34 +148,13 @@ int main(int argv, char** argc)
         inRange(state.CurState[0].red - conf1, state.CurState[0].red + conf1, bgr1[2])) {
 
 
-      //Show CurState cap colors
-      cout << "cap: " << bgr1[0] << "--" << bgr1[1] << "--" << bgr1[2] << endl;
-
       //send stop pressing A signal
       kill(pid, SIGUSR1);
 
-      for(int i = 0; i < 30; i++) {
-        vid.read(frame);
-        imshow("window", frame);
-        cvWaitKey(1000 / fps);
-      }
+      showFrames(30, &vid, &frame);
 
       //get poke bgr value with 10 frame accuracry
-      bgr2 = new int[3] {0};
-      for(int i = 0; i < 10; i++) {
-        vid.read(frame);
-        temp = getBGR(&frame, state.CurState[1].col, state.CurState[1].row, state.CurState[1].height);
-        bgr2[0] += temp[0]; 
-        bgr2[1] += temp[1]; 
-        bgr2[2] += temp[2]; 
-        addBlackBox(&frame, state.CurState[1].col, state.CurState[1].row, state.CurState[1].height);
-        imshow("window", frame);
-        free(temp);
-        cvWaitKey(1000 / fps);
-      }
-      bgr2[0] = bgr2[0] / 10;
-      bgr2[1] = bgr2[1] / 10;
-      bgr2[2] = bgr2[2] / 10;
+      bgr2 = getAverageColorFrames(10, &vid, &frame);
 
         //CurStateent encounter BGR value
       cout << "poke: " << bgr2[0] << "--" << bgr2[1] << "--" << bgr2[2] << endl;
@@ -194,20 +171,18 @@ int main(int argv, char** argc)
 
         //passes bright soft reset screen then resumes
         softReset();
-        for(int i = 0; i < 50; i++) {
-          vid.read(frame);
-          imshow("window", frame);
-          cvWaitKey(1000 / fps);
-        }
+        showFrames(50, &vid, &frame);
+
         kill(pid, SIGUSR1);
 
         //free bgr
         free(bgr1);
         free(bgr2);
        } else {
-         cout << "Shiny has been found!!!" << std::endl; 
-         cout << "poke: " << bgr2[0] << "--" << bgr2[1] << "--" << bgr2[2] << endl;
-         state.printState();
+         n = time(0);
+         now = ctime($n);
+         std::cout << "Shiny has been found!!!" << std::endl; 
+         std::cout << "The current data and time is: " << now << std::endl;
          free(bgr1);
          free(bgr2);
          //endless loop of reading frames

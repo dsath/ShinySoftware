@@ -67,35 +67,6 @@ int main() {
     day.close();
     night.close();
   }
-  //test2
-  {
-    TimeState state;
-    state.setState();
-    int bgr1[3] {1, 2, 3};
-    int bgr2[3] {4, 5, 6};
-    box before[2];
-    box after[2];
-
-    before[0] = state.CurState[0];
-    before[1] = state.CurState[1];
-    state.setNowTargetColor(bgr1, bgr2);
-    state.setState();
-    after[0] = state.CurState[0];
-    after[1] = state.CurState[1];
-
-    assert(before[0].blue != after[0].blue);
-    assert(before[0].green != after[0].green);
-    assert(before[0].red != after[0].red);
-    assert(before[1].blue != after[1].blue);
-    assert(before[1].green != after[1].green);
-    assert(before[1].red != after[1].red);
-    assert(after[0].blue  == 1);
-    assert(after[0].green == 2);
-    assert(after[0].red   == 3);
-    assert(after[1].blue  == 4);
-    assert(after[1].green == 5);
-    assert(after[1].red   == 6);
-  }
   cout << "All tests passed!" << endl;
 }
 

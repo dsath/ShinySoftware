@@ -104,20 +104,48 @@ void setBox(Mat f, box *b) {
   }
 }
 
+int* getAverageColorFrames(int n, VideoCapture *vc, Mat *f) {
+  int ret = new int[3] {0};
+  int *temp;
+  for(int i = 0; i < n; i++) {
+    vc.read(f);
+    temp = getBGR(&f, state.CurState[1].col, state.CurState[1].row, state.CurState[1].height);
+    ret[0] += temp[0];
+    ret[1] += temp[1];
+    ret[2] += temp[2];
+    addBlackBox(&f, state.CurState[1].col, state.CurState[1].row, state.CurState[1].height);
+    imshow("window", f);
+    free(temp);
+    cvWaitKey(1000 / fps);
+  }
+  ret[0] = ret[0] / n;
+  ret[1] = ret[1] / n;
+  ret[2] = ret[2] / n;
+  return ret;
+}
+
+void showFrames(int n, VideoCapture *vc, Mat *f) {
+  for(int i = 0; i < n; i++) {
+    vid.read(frame);
+    imshow("window", frame);
+    cvWaitKey(1000 / fps);
+  }
+}
+
 void pressA() {
-      digitalWrite(buttonA, HIGH);
-      std::this_thread::sleep_for(std::chrono::milliseconds(400));
-      digitalWrite(buttonA, LOW);
-      std::this_thread::sleep_for(std::chrono::milliseconds(400));
+  digitalWrite(buttonA, HIGH);
+  std::this_thread::sleep_for(std::chrono::milliseconds(400));
+  digitalWrite(buttonA, LOW);
+  std::this_thread::sleep_for(std::chrono::milliseconds(400));
 }
 
 void softReset() {
-      digitalWrite(buttonStart, HIGH);
-      digitalWrite(buttonSelect, HIGH);
-      std::this_thread::sleep_for(std::chrono::milliseconds(400));
-      digitalWrite(buttonStart, LOW);
-      digitalWrite(buttonSelect, LOW);
-      std::this_thread::sleep_for(std::chrono::milliseconds(400));
+  digitalWrite(buttonStart, HIGH);
+  digitalWrite(buttonSelect, HIGH);
+  std::this_thread::sleep_for(std::chrono::milliseconds(400));
+  digitalWrite(buttonStart, LOW);
+  digitalWrite(buttonSelect, LOW);
+  std::this_thread::sleep_for(std::chrono::milliseconds(400));
 }
 void initButtons() {
   pinMode(buttonA, OUTPUT);
