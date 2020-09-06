@@ -94,22 +94,16 @@ int main(int argv, char** argc)
   n = time(0);
   now = ctime(&n);
 
-  std::cout << "The date and time is: " << now << std::endl;
-  std::cout << "Starting hunt... "  << std::endl;
+  std::cout << "The date and time is: " << now;
+  std::cout << "Starting hunt... ";
+  std::cout << std::endl << std::endl;
 
   softReset();
   while (vid.read(frame)) {
-    //signal to stop or continue pressing A to proccess
+
+#ifdef TIMECHANGE
     //set state of program based off current time
-#ifdef TIMECHANGE
     state.setState();
-#endif
-
-#ifndef TIMECHANGE
-    state.setState(CAVE_STATE);
-#endif
-
-#ifdef TIMECHANGE
     //wait till time has changed completely
     if(state.isTimeChange()) {
       //stop pressing A
@@ -135,6 +129,10 @@ int main(int argv, char** argc)
       kill(pid, SIGUSR1);
       continue;
     }
+#endif
+
+#ifndef TIMECHANGE
+    state.setState(CAVE_STATE);
 #endif
 
 
