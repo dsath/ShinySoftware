@@ -12,106 +12,98 @@
 #include <fcntl.h>
 #include <fstream>
 #include <string>
-#include <wiringPi.h>
 #include <sys/types.h>
 #include <signal.h>
 
-#include "../lib/my.hpp"
 #include "../lib/box.hpp"
 
 #define buttonA 0
 #define buttonStart 2
 #define buttonSelect 3
 
-static bool stop = false;
-void _stop(int sig) {
-  if (sig == SIGUSR1) {
-    stop = !(stop);
-  }
-}
-
 using namespace cv;
 using namespace std;
 
+
+int* getBGR(Mat *f, int sc, int sr, int bh) {
+    int *vals = new int[3] {0};
+
+    for (int c = sc; c < sc + bh; ++c) {
+      for(int r = sr; r < sr + bh; ++r) {
+        //store rgb values of current frame
+        vals[0] += f->at<Vec3b>(r, c)[0]; 
+        vals[1] += f->at<Vec3b>(r, c)[1]; 
+        vals[2] += f->at<Vec3b>(r, c)[2];
+      }
+    }
+
+    //divide values by how many pixels
+    vals[0] /= (bh * bh);
+    vals[1] /= (bh * bh);
+    vals[2] /= (bh * bh);
+    return vals;
+}
+
+void addBlackBox(Mat *f, int sc, int sr, int bh) {
+    for (int c = sc; c < sc + bh; ++c) {
+      for(int r = sr; r < sr + bh; ++r) {
+        f->at<Vec3b>(r, c)[0] = 0; 
+        f->at<Vec3b>(r, c)[1] = 0; 
+        f->at<Vec3b>(r, c)[2] = 0;
+      }
+    }
+}
+void setBoxP(Mat f, box *b) {
+  Mat temp;
+  int *bgr;
+  int change = 2;
+  namedWindow("window", CV_WINDOW_AUTOSIZE);
+
+  bool done = false;;
+  while ( !done ) {
+    char c;
+    temp = f.clone();
+    bgr = getBGR(&temp, b->col, b->row, b->height);
+    addBlackBox(&temp, b->col, b->row, b->height);
+
+    std::cout << "BGR: " << bgr[0] << " -- " <<  bgr[1] << " -- " << bgr[2] << std::endl;
+    imshow("window", temp);
+    c = waitKey( 0 ); 
+    switch(c) {
+      case 119:
+          *b = {b->col, b->row - change, b->height};
+          break;
+      case 115:
+          *b = {b->col, b->row + change, b->height};
+          break;
+      case 97:
+          *b = {b->col - change, b->row, b->height};
+          break;
+      case 100:
+          *b = {b->col + change, b->row, b->height};
+          break;
+      default:
+          done = true;
+          break;
+      }
+  }
+}
 int main(int argv, char** argc)
 {
   const int boxSize = 5;
-  wiringPiSetup();
-  initButtons();
+  struct box one;
   
-  char c;
-  struct box one = {135, 225, boxSize};
-  struct box two = {410, 70, boxSize};
 
-  const int fps = 20;
-  //blue, green, red value for box one
-  int *bgr1;
-  //blue, green, red value for box two 
-  int *bgr2;
- 
   Mat frame;
   namedWindow("window", CV_WINDOW_AUTOSIZE);
-  VideoCapture vid(stoi(argc[1]));
+  frame = imread("assets/colors1.png", 1);
+  one = {frame.cols/2, frame.rows/2, boxSize};
   
-  //set resolution
-  make_480(&vid);
+  setBoxP(frame, &one);
 
-  
+  frame = imread("assets/colors2.png", 1);
+  one = {frame.cols/2, frame.rows/2, boxSize};
 
-  signal(SIGUSR1, _stop);
-  //start A pressing process
-  pid_t pid = fork();
-  if(pid == -1) {
-    printf("Error when forking");
-  }
-  else if (pid == 0) {
-    while(1) {
-      //continuously press A until signal received
-      while(!_stop); 
-      pressA();
-    }
-  }
-
-  softReset();
-  while(vid.read(frame)) {
-    imshow("window", frame);
-    if(cvWaitKey(1000/fps) > 0)
-      break;
-  }
-
-  setBox(frame, &one);
-  setBox(frame, &two);
-
-  bgr1 = getBGR(&frame, one.col, one.row, one.height);
-  addBlackBox(&frame, one.col, one.row, one.height);
-  bgr2 = getBGR(&frame, two.col, two.row, two.height);
-  addBlackBox(&frame, two.col, two.row, two.height);
-  imshow("window", frame);
-
-  cout << "one bgr:" << bgr1[0] << " -- " << bgr1[1] << " -- " << bgr1[2] << std::endl;
-  cout << "one coord:" << one.col << " -- " << one.row<< " -- " << one.height << std::endl;
-  cout << "two bgr:" << bgr2[0] << " -- " << bgr2[1] << " -- " << bgr2[2] << std::endl;
-  cout << "two coord:" << two.col << " -- " << two.row << " -- " << two.height << std::endl;
-  cout << "Press s to save and exit, press anything else to exit" << std::endl;
-
-  c = waitKey(0);
-  if(c == 's') {
-    ofstream coords("coords.txt");
-    ofstream file;
-    string filename;
-    
-    std::cout << "Enter Name of file." << endl;
-    std::cin >> filename;
-    file.open (filename);
-    
-    //last color recorded coords will be saved
-    coords << one.col << endl << one.row << endl << one.height << endl;
-    coords << two.col << endl << two.row << endl << two.height << endl;
-    file << bgr1[0] << endl << bgr1[1] << endl << bgr1[2] << endl;
-    file << bgr2[0] << endl << bgr2[1] << endl << bgr2[2] << endl;
-  }
-
-  free(bgr1);
-  free(bgr2);
+  setBoxP(frame, &one);
   return EXIT_SUCCESS;
 }
