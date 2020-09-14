@@ -55,8 +55,8 @@ int main(int argv, char** argc)
   char *now;
 
   //confidence for getting values
-  const int conf1 = 4;
-  const int conf2 = 10;
+  const int conf1 = 10;
+  const int conf2 = 15;
 
   int numResets = 0;
 

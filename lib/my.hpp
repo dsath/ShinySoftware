@@ -19,6 +19,7 @@ int* getBGR(Mat *f, int sc, int sr, int bh);
 void addBlackBox(Mat *f, int sc, int sr, int bh);
 bool inRange(int low, int high, int val);
 void setBox(Mat f, box *b); 
+void setBoxP(Mat f, box *b); 
 void pressA();
 void softReset();
 void initButtons();

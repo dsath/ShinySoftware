@@ -22,14 +22,7 @@ void _stop(int sig) {
   }
 }
 
-int coord[3] {90, 310, 10};
-/*
-90
-310
-10
-465
-110
-10*/
+int coord[3] {422, 104, 5};
 
 int main(int argv, char** argc)
 {

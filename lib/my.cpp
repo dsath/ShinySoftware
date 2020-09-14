@@ -105,6 +105,42 @@ void setBox(Mat f, box *b) {
   }
 }
 
+void setBoxP(Mat f, box *b) {
+  Mat temp;
+  int *bgr;
+  int change = 2;
+  namedWindow("window", CV_WINDOW_AUTOSIZE);
+
+  bool done = false;;
+  while ( !done ) {
+    char c;
+    temp = f.clone();
+    bgr = getBGR(&temp, b->col, b->row, b->height);
+    addBlackBox(&temp, b->col, b->row, b->height);
+
+    std::cout << "BGR: " << bgr[0] << " -- " <<  bgr[1] << " -- " << bgr[2] << std::endl;
+    imshow("window", temp);
+    c = waitKey( 0 ); 
+    switch(c) {
+      case 119:
+          *b = {b->col, b->row - change, b->height};
+          break;
+      case 115:
+          *b = {b->col, b->row + change, b->height};
+          break;
+      case 97:
+          *b = {b->col - change, b->row, b->height};
+          break;
+      case 100:
+          *b = {b->col + change, b->row, b->height};
+          break;
+      default:
+          done = true;
+          break;
+      }
+  }
+}
+
 int* getAverageColorFrames(int n, VideoCapture *vc, Mat *f, TimeState *state, int fps) {
   int *ret = new int[3] {0};
   int *temp;
