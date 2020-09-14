@@ -8,21 +8,14 @@
 #include "box.hpp"
 #include "TimeState.hpp"
 
-using namespace cv;
-using namespace std;
-
-
-void make_1080(VideoCapture *v);
-void make_720(VideoCapture *v);
-void make_480(VideoCapture *v);
-int* getBGR(Mat *f, int sc, int sr, int bh);
-void addBlackBox(Mat *f, int sc, int sr, int bh);
+void make_1080(cv::VideoCapture *v);
+void make_720(cv::VideoCapture *v);
+void make_480(cv::VideoCapture *v);
+int* getBGR(cv::Mat *f, int sc, int sr, int bh);
+void addBlackBox(cv::Mat *f, int sc, int sr, int bh);
 bool inRange(int low, int high, int val);
-void setBox(Mat f, box *b); 
-void setBoxP(Mat f, box *b); 
-void pressA();
-void softReset();
-void initButtons();
-int* getAverageColorFrames(int n, VideoCapture *vc, Mat *f, TimeState *state, int fps);  
-void showFrames(int n, VideoCapture *vc, Mat *f, int fps);
+void setBox(cv::Mat f, box *b); 
+void setBoxP(cv::Mat f, box *b); 
+int* getAverageColorFrames(int n, cv::VideoCapture *vc, cv::Mat *f, TimeState *state, int fps);  
+void showFrames(int n, cv::VideoCapture *vc, cv::Mat *f, int fps);
 #endif

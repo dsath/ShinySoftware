@@ -24,14 +24,8 @@
 #include "lib/my.hpp"
 #include "lib/box.hpp"
 #include "lib/TimeState.hpp"
+#include "lib/wp.hpp"
 
-
-#define buttonA 0
-#define buttonStart 2
-#define buttonSelect 3
-
-using namespace cv;
-using namespace std;
 
 //used for stopping A presses
 static bool stopPressA = false;
@@ -69,10 +63,10 @@ int main(int argv, char** argc)
   int *bgr2;
 
 
-  Mat frame;
-  namedWindow("window", CV_WINDOW_AUTOSIZE);
+  cv::Mat frame;
+  cv::namedWindow("window", CV_WINDOW_AUTOSIZE);
   //selects camera from command line
-  VideoCapture vid(stoi(argc[1])); 
+  cv::VideoCapture vid(std::stoi(argc[1])); 
   //make resolution 480
   make_480(&vid);
 
@@ -81,7 +75,7 @@ int main(int argv, char** argc)
   //start A pressing process
   pid_t pid = fork();
   if(pid == -1) {
-    printf("Error when forking");
+    std::cout << "Error when forking" << std::endl;
   }
   else if (pid == 0) {
     while(1) {
@@ -108,7 +102,7 @@ int main(int argv, char** argc)
     if(state.isTimeChange()) {
       //stop pressing A
       kill(pid, SIGUSR1);
-      cout << "Waiting..." << endl;
+      std::cout << "Waiting..." << std::endl;
       std::this_thread::sleep_for(std::chrono::minutes(6));
       //Soft reset and passes bright soft reset screen then resumes
       softReset();
@@ -121,7 +115,7 @@ int main(int argv, char** argc)
     //skip twilight state
     if(state.getState() == TWILIGHT_STATE) {
       kill(pid, SIGUSR1);
-      cout << "Waiting..." << endl;
+      std::cout << "Waiting..." << std::endl;
       std::this_thread::sleep_for(std::chrono::hours(3));
       std::this_thread::sleep_for(std::chrono::minutes(5));
       softReset();
@@ -138,7 +132,7 @@ int main(int argv, char** argc)
 
     bgr1 = getBGR(&frame, state.CurState[0].col, state.CurState[0].row, state.CurState[0].height);
     addBlackBox(&frame, state.CurState[0].col, state.CurState[0].row, state.CurState[0].height);
-    imshow("window", frame);
+    cv::imshow("window", frame);
 
     //Check if yellow cap appears
     if( inRange(state.CurState[0].blue - conf1, state.CurState[0].blue + conf1, bgr1[0]) && 
@@ -155,7 +149,7 @@ int main(int argv, char** argc)
       bgr2 = getAverageColorFrames(10, &vid, &frame, &state, fps);
 
         //CurStateent encounter BGR value
-      cout << "poke: " << bgr2[0] << "--" << bgr2[1] << "--" << bgr2[2] << endl;
+      std::cout << "poke: " << bgr2[0] << "--" << bgr2[1] << "--" << bgr2[2] << std::endl;
 
       //check if pokemon is shiny
 
@@ -165,7 +159,7 @@ int main(int argv, char** argc)
         
         //number soft resets
         numResets++;
-        cout << "Soft Resets: " << numResets << std::endl << std::endl;
+        std::cout << "Soft Resets: " << numResets << std::endl << std::endl;
 
         //passes bright soft reset screen then resumes
         softReset();
@@ -185,8 +179,8 @@ int main(int argv, char** argc)
          free(bgr2);
          //endless loop of reading frames
          while(vid.read(frame)) {
-           imshow("window", frame);
-           cvWaitKey(1000 / fps);
+           cv::imshow("window", frame);
+           cv::waitKey(1000 / fps);
          }
          break;
        }
@@ -194,7 +188,7 @@ int main(int argv, char** argc)
       //free cap bgr
       free(bgr1);
     }
-    cvWaitKey(1000 / fps);
+    cv::waitKey(1000 / fps);
   }
   return EXIT_SUCCESS;
 }

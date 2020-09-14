@@ -18,10 +18,7 @@
 
 #include "../lib/my.hpp"
 #include "../lib/box.hpp"
-
-#define buttonA 0
-#define buttonStart 2
-#define buttonSelect 3
+#include "../lib/wp.hpp"
 
 static bool stop = false;
 void _stop(int sig) {
@@ -29,9 +26,6 @@ void _stop(int sig) {
     stop = !(stop);
   }
 }
-
-using namespace cv;
-using namespace std;
 
 int main(int argv, char** argc)
 {
@@ -49,9 +43,9 @@ int main(int argv, char** argc)
   //blue, green, red value for box two 
   int *bgr2;
  
-  Mat frame;
-  namedWindow("window", CV_WINDOW_AUTOSIZE);
-  VideoCapture vid(stoi(argc[1]));
+  cv::Mat frame;
+  cv::namedWindow("window", CV_WINDOW_AUTOSIZE);
+  cv::VideoCapture vid(std::stoi(argc[1]));
   
   //set resolution
   make_480(&vid);
@@ -74,7 +68,7 @@ int main(int argv, char** argc)
 
   softReset();
   while(vid.read(frame)) {
-    imshow("window", frame);
+    cv::imshow("window", frame);
     if(cvWaitKey(1000/fps) > 0)
       break;
   }
@@ -86,29 +80,29 @@ int main(int argv, char** argc)
   addBlackBox(&frame, one.col, one.row, one.height);
   bgr2 = getBGR(&frame, two.col, two.row, two.height);
   addBlackBox(&frame, two.col, two.row, two.height);
-  imshow("window", frame);
+  cv::imshow("window", frame);
 
-  cout << "one bgr:" << bgr1[0] << " -- " << bgr1[1] << " -- " << bgr1[2] << std::endl;
-  cout << "one coord:" << one.col << " -- " << one.row<< " -- " << one.height << std::endl;
-  cout << "two bgr:" << bgr2[0] << " -- " << bgr2[1] << " -- " << bgr2[2] << std::endl;
-  cout << "two coord:" << two.col << " -- " << two.row << " -- " << two.height << std::endl;
-  cout << "Press s to save and exit, press anything else to exit" << std::endl;
+  std::cout << "one bgr:" << bgr1[0] << " -- " << bgr1[1] << " -- " << bgr1[2] << std::endl;
+  std::cout << "one coord:" << one.col << " -- " << one.row<< " -- " << one.height << std::endl;
+  std::cout << "two bgr:" << bgr2[0] << " -- " << bgr2[1] << " -- " << bgr2[2] << std::endl;
+  std::cout << "two coord:" << two.col << " -- " << two.row << " -- " << two.height << std::endl;
+  std::cout << "Press s to save and exit, press anything else to exit" << std::endl;
 
-  c = waitKey(0);
+  c = cv::waitKey(0);
   if(c == 's') {
-    ofstream coords("coords.txt");
-    ofstream file;
-    string filename;
+    std::ofstream coords("coords.txt");
+    std::ofstream file;
+    std::string filename;
     
-    std::cout << "Enter Name of file." << endl;
+    std::cout << "Enter Name of file." << std::endl;
     std::cin >> filename;
     file.open (filename);
     
     //last color recorded coords will be saved
-    coords << one.col << endl << one.row << endl << one.height << endl;
-    coords << two.col << endl << two.row << endl << two.height << endl;
-    file << bgr1[0] << endl << bgr1[1] << endl << bgr1[2] << endl;
-    file << bgr2[0] << endl << bgr2[1] << endl << bgr2[2] << endl;
+    coords << one.col << std::endl << one.row << std::endl << one.height << std::endl;
+    coords << two.col << std::endl << two.row << std::endl << two.height << std::endl;
+    file << bgr1[0] << std::endl << bgr1[1] << std::endl << bgr1[2] << std::endl;
+    file << bgr2[0] << std::endl << bgr2[1] << std::endl << bgr2[2] << std::endl;
   }
 
   free(bgr1);
