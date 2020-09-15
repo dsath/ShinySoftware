@@ -18,7 +18,7 @@
 
 #include "../lib/my.hpp"
 #include "../lib/box.hpp"
-#include "../lib/wp.hpp"
+#include "../lib/NDS.hpp"
 
 static bool stop = false;
 void _stop(int sig) {
@@ -29,15 +29,16 @@ void _stop(int sig) {
 
 int main(int argv, char** argc)
 {
+  NDS nds;
+
+  const int fps = 20;
   const int boxSize = 5;
-  wiringPiSetup();
-  initButtons();
   
   char c;
+  //starting postions and size
   struct box one = {135, 225, boxSize};
   struct box two = {410, 70, boxSize};
 
-  const int fps = 20;
   //blue, green, red value for box one
   int *bgr1;
   //blue, green, red value for box two 
@@ -52,21 +53,9 @@ int main(int argv, char** argc)
 
   
 
-  signal(SIGUSR1, _stop);
-  //start A pressing process
-  pid_t pid = fork();
-  if(pid == -1) {
-    printf("Error when forking");
-  }
-  else if (pid == 0) {
-    while(1) {
-      //continuously press A until signal received
-      while(!_stop); 
-      pressA();
-    }
-  }
+  nds.startPressA();
+  nds.softReset();
 
-  softReset();
   while(vid.read(frame)) {
     cv::imshow("window", frame);
     if(cvWaitKey(1000/fps) > 0)
