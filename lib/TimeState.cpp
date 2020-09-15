@@ -5,8 +5,6 @@
 #include "TimeState.hpp"
 #include "box.hpp"
 
-using namespace std;
-
 TimeState::TimeState() {
 
   //box coordinates and size
@@ -22,14 +20,13 @@ TimeState::TimeState() {
   int caveBlue1, caveGreen1, caveRed1;
   int caveBlue2, caveGreen2, caveRed2;
 
-  ifstream file;
 
   //get box coordinates and size
   {
-    ifstream file;
+    std::ifstream file;
     file.open("setup/coords.txt");
     if(!(file.is_open())) {
-      std::cout << "error opening file" << endl;
+      std::cout << "error opening file" << std::endl;
     }
     file >> c1; file >> r1; file >> h1;
     file >> c2; file >> r2; file >> h2;
@@ -38,10 +35,10 @@ TimeState::TimeState() {
 
   //get bgr values for daytime
   {
-    ifstream file;
+    std::ifstream file;
     file.open("setup/day.txt");
     if(!(file.is_open())) {
-      std::cout << "error opening file" << endl;
+      std::cout << "error opening file" << std::endl;
     }
     file >> dayBlue1; file >> dayGreen1; file >> dayRed1;
     file >> dayBlue2; file >> dayGreen2; file >> dayRed2;
@@ -50,10 +47,10 @@ TimeState::TimeState() {
 
   //get bgr values for twilight 
   {
-    ifstream file;
+    std::ifstream file;
     file.open("setup/twilight.txt");
     if(!(file.is_open())) {
-      std::cout << "error opening file" << endl;
+      std::cout << "error opening file" << std::endl;
     }
     file >> twilightBlue1; file >> twilightGreen1; file >> twilightRed1;
     file >> twilightBlue2; file >> twilightGreen2; file >> twilightRed2;
@@ -62,9 +59,10 @@ TimeState::TimeState() {
 
   //get bgr values for nighttime
   {
+    std::ifstream file;
     file.open("setup/night.txt");
     if(!(file.is_open())) {
-      std::cout << "error opening file" << endl;
+      std::cout << "error opening file" << std::endl;
     }
     file >> nightBlue1; file >> nightGreen1; file >> nightRed1;
     file >> nightBlue2; file >> nightGreen2; file >> nightRed2;
@@ -73,9 +71,10 @@ TimeState::TimeState() {
 
   //get bgr values for cave
   {
+    std::ifstream file;
     file.open("setup/cave.txt");
     if(!(file.is_open())) {
-      std::cout << "error opening file" << endl;
+      std::cout << "error opening file" << std::endl;
     }
     file >> caveBlue1; file >> caveGreen1; file >> caveRed1;
     file >> caveBlue2; file >> caveGreen2; file >> caveRed2;

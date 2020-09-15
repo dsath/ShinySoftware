@@ -24,33 +24,23 @@
 #include "lib/my.hpp"
 #include "lib/box.hpp"
 #include "lib/TimeState.hpp"
-#include "lib/wp.hpp"
+#include "lib/NDS.hpp"
 
-
-//used for stopping A presses
-static bool stopPressA = false;
-
-void _stop(int sig) {
-  if (sig == SIGUSR1) {
-    stopPressA = !(stopPressA);
-  }
-}
 
 int main(int argv, char** argc)
 {
-  //TimeState object used to keep track of day/night cycles
+  //TimeState object used to keep track of target BGR through day/night cycles
   TimeState state;
-
-  wiringPiSetup();
-  initButtons();
+  //Controls Nintendo DS by using RPI4 GPIO pins. Starts a process for pressing A.
+  NDS nds;
 
   //for keeping track of time
   time_t n;
   char *now;
 
   //confidence for getting values
-  const int conf1 = 10;
-  const int conf2 = 15;
+  int conf1 = std::stoi(argc[2]);
+  int conf2 = std::stoi(argc[3]);
 
   int numResets = 0;
 
@@ -70,21 +60,6 @@ int main(int argv, char** argc)
   //make resolution 480
   make_480(&vid);
 
-  signal(SIGUSR1, _stop);
-
-  //start A pressing process
-  pid_t pid = fork();
-  if(pid == -1) {
-    std::cout << "Error when forking" << std::endl;
-  }
-  else if (pid == 0) {
-    while(1) {
-      //continuously press A until signal received
-      while(stopPressA); 
-      pressA();
-    }
-  }
-
   n = time(0);
   now = ctime(&n);
 
@@ -92,7 +67,8 @@ int main(int argv, char** argc)
   std::cout << "Starting hunt... ";
   std::cout << std::endl << std::endl;
 
-  softReset();
+  nds.softReset();
+  nds.startPressA();
   while (vid.read(frame)) {
 
 #ifdef TIMECHANGE
@@ -141,7 +117,7 @@ int main(int argv, char** argc)
 
 
       //send stop pressing A signal
-      kill(pid, SIGUSR1);
+      nds.stopPressA();
 
       showFrames(30, &vid, &frame, fps);
 
@@ -157,15 +133,17 @@ int main(int argv, char** argc)
              inRange(state.CurState[1].green - conf2, state.CurState[1].green + conf2, bgr2[1]) &&
              inRange(state.CurState[1].red - conf2, state.CurState[1].red + conf2, bgr2[2])) {
         
+        //not shiny, soft reset
+        nds.softReset();
         //number soft resets
         numResets++;
         std::cout << "Soft Resets: " << numResets << std::endl << std::endl;
 
         //passes bright soft reset screen then resumes
-        softReset();
         showFrames(50, &vid, &frame, fps);
 
-        kill(pid, SIGUSR1);
+        //start pressing A again
+        nds.startPressA();
 
         //free bgr
         free(bgr1);
